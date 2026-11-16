@@ -1,0 +1,46 @@
+# RTL simulation (iverilog 13.0) — Sun Nov 15 12:33:08 IST 2026
+=====================================================
+ Direct-Mapped Cache  --  Hit/Miss Report
+   trace        : sim/traces/sequential.txt
+   config       : 1024 B cache, 16 B blocks, 64 lines
+   miss penalty : 10 cycles
+-----------------------------------------------------
+   accesses     : 256
+   hits         : 192
+   misses       : 64
+   hit  ratio   : 75.00 %
+   miss ratio   : 25.00 %
+-----------------------------------------------------
+   AMAT (model) : 3.500 cycles  [1 + miss_rate*10]
+   AMAT (meas.) : 3.500 cycles  [total_cycles/accesses]
+=====================================================
+=====================================================
+ Direct-Mapped Cache  --  Hit/Miss Report
+   trace        : sim/traces/repeated.txt
+   config       : 1024 B cache, 16 B blocks, 64 lines
+   miss penalty : 10 cycles
+-----------------------------------------------------
+   accesses     : 256
+   hits         : 248
+   misses       : 8
+   hit  ratio   : 96.88 %
+   miss ratio   : 3.12 %
+-----------------------------------------------------
+   AMAT (model) : 1.312 cycles  [1 + miss_rate*10]
+   AMAT (meas.) : 1.312 cycles  [total_cycles/accesses]
+=====================================================
+=====================================================
+ Direct-Mapped Cache  --  Hit/Miss Report
+   trace        : sim/traces/random.txt
+   config       : 1024 B cache, 16 B blocks, 64 lines
+   miss penalty : 10 cycles
+-----------------------------------------------------
+   accesses     : 256
+   hits         : 41
+   misses       : 215
+   hit  ratio   : 16.02 %
+   miss ratio   : 83.98 %
+-----------------------------------------------------
+   AMAT (model) : 9.398 cycles  [1 + miss_rate*10]
+   AMAT (meas.) : 9.398 cycles  [total_cycles/accesses]
+=====================================================
