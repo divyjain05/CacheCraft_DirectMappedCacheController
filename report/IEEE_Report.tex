@@ -1,0 +1,258 @@
+%=============================================================================
+% IEEE Conference-format report — Direct-Mapped Cache Controller (Phase I)
+% Compile with: pdflatex IEEE_Report.tex   (needs the IEEEtran class)
+%   - Overleaf: create a project, upload this file, set compiler to pdfLaTeX.
+%   - Local (TeX Live): `pdflatex IEEE_Report.tex` twice (for references).
+% Fill in every [Name / Roll No] before submitting.
+%=============================================================================
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{url}
+
+\begin{document}
+
+\title{Design and Analysis of a Direct-Mapped Cache\\ Controller in Verilog}
+
+\author{
+\IEEEauthorblockN{[Member 1 --- Name]}
+\IEEEauthorblockA{Roll No: [xxx]\\ Dept. of [\ldots]\\ [University]}
+\and
+\IEEEauthorblockN{[Member 2 --- Name]}
+\IEEEauthorblockA{Roll No: [xxx]\\ Dept. of [\ldots]\\ [University]}
+\and
+\IEEEauthorblockN{[Member 3 --- Name]}
+\IEEEauthorblockA{Roll No: [xxx]\\ Dept. of [\ldots]\\ [University]}
+\and
+\IEEEauthorblockN{[Member 4 --- Name]}
+\IEEEauthorblockA{Roll No: [xxx]\\ Dept. of [\ldots]\\ [University]}
+\and
+\IEEEauthorblockN{[Member 5 --- Name]}
+\IEEEauthorblockA{Roll No: [xxx]\\ Dept. of [\ldots]\\ [University]}
+}
+
+\maketitle
+
+%-----------------------------------------------------------------------------
+\begin{abstract}
+The growing gap between processor and main-memory speeds---the ``memory
+wall''---makes on-chip caching essential to modern computer performance. This
+work presents the design, implementation, and analysis of a \emph{direct-mapped
+cache controller} in Verilog HDL. The prototype implements a 1~KB cache with
+16-byte blocks for a 32-bit byte-addressed memory, organised as 64 lines with a
+22-bit tag, 6-bit index, and 4-bit offset. The design comprises eight RTL
+modules---an address decoder, tag/data/valid storage arrays, a tag comparator,
+a behavioural main-memory model, and a three-state controller FSM---integrated
+into a single top-level and driven by a trace-based testbench. Three
+representative access patterns (sequential, repeated, and random) are used to
+measure hit ratio, miss ratio, and Average Memory Access Time (AMAT). The RTL
+results are cross-validated against an independent Python reference model and
+agree exactly: hit ratios of 75.00\%, 96.88\%, and 16.02\%, giving AMAT values
+of 3.50, 1.31, and 9.40 cycles respectively for a 10-cycle miss penalty. The
+results quantitatively demonstrate how temporal and spatial locality govern
+cache effectiveness.
+\end{abstract}
+
+\begin{IEEEkeywords}
+cache memory, direct-mapped cache, memory hierarchy, AMAT, locality of
+reference, Verilog HDL, computer architecture.
+\end{IEEEkeywords}
+
+%-----------------------------------------------------------------------------
+\section{Introduction}
+Processor clock speeds have historically improved far faster than main-memory
+latency. A modern CPU can execute hundreds of instructions in the time taken to
+service a single DRAM access. Caches bridge this gap by exploiting
+\emph{locality of reference}: programs tend to reuse recently accessed data
+(temporal locality) and to access nearby addresses (spatial locality).
+
+This project designs and analyses the simplest practical cache
+organisation---the \emph{direct-mapped cache}, in which every memory block maps
+to exactly one cache line. The objectives are to (i) implement a synthesizable
+cache controller in Verilog, (ii) correctly derive and handle the
+tag/index/offset address fields and the valid bit, (iii) model the hit and miss
+(refill) paths with a finite-state machine, and (iv) measure hit/miss
+statistics and AMAT across different memory-access traces to analyse
+architectural behaviour.
+
+%-----------------------------------------------------------------------------
+\section{Literature Review}
+The foundations of cache memory and the memory hierarchy are established in the
+standard texts. Hennessy and Patterson~\cite{hennessy} formalise the AMAT model
+and the ``three Cs'' classification of misses (compulsory, capacity, conflict),
+which directly frames the analysis in this work. Patterson and
+Hennessy~\cite{patterson} present the direct-mapped organisation and the
+tag/index/offset address decomposition used here.
+
+Smith's classic survey~\cite{smith} catalogues cache design trade-offs---block
+size, associativity, and replacement---and shows how increasing block size
+improves spatial-locality hit rates up to a point before pollution dominates.
+The principle of locality itself traces to Denning's work on program behaviour
+and working sets~\cite{denning}.
+
+On the implementation side, Harris and Harris~\cite{harris} give a didactic HDL
+treatment of memory systems and finite-state-machine controllers, which informs
+the controller structure in this prototype. These sources motivate our chosen
+configuration (a small, analysable direct-mapped cache) and our use of synthetic
+traces that isolate temporal versus spatial locality, following the evaluation
+methodology common in the architecture literature.
+
+%-----------------------------------------------------------------------------
+\section{Proposed Solution}
+
+\subsection{Cache Organisation}
+A 1~KB direct-mapped cache with 16-byte blocks is used. For a 32-bit byte
+address the fields are shown below.
+
+\begin{verbatim}
+ 31                      10 9     4 3    0
++--------------------------+-------+------+
+|         TAG (22)         |INDEX 6|OFF 4 |
++--------------------------+-------+------+
+\end{verbatim}
+
+\begin{itemize}
+  \item \textbf{Offset (4 bits)} $=\log_2(16)$: byte within a block; bits [3:2]
+        select one of the four 32-bit words.
+  \item \textbf{Index (6 bits)} $=\log_2(64)$: selects one of 64 lines.
+  \item \textbf{Tag (22 bits)} $= 32-6-4$: stored per line and compared on each
+        access.
+\end{itemize}
+
+\subsection{RTL Modules}
+Table~\ref{tab:modules} lists the eight RTL modules.
+
+\begin{table}[htbp]
+\caption{RTL modules and their functions}
+\label{tab:modules}
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Module} & \textbf{Function} \\
+\midrule
+\texttt{address\_decoder}  & splits address into tag/index/offset/word-select \\
+\texttt{tag\_ram}          & $64 \times 22$-bit stored tags \\
+\texttt{cache\_data\_ram}  & $64 \times 128$-bit data blocks \\
+\texttt{valid\_ram}        & 64 valid bits, cleared on reset \\
+\texttt{tag\_comparator}   & \texttt{hit = valid AND (tag\_in == tag\_st)} \\
+\texttt{main\_memory}      & behavioural model, 10-cycle fetch latency \\
+\texttt{cache\_controller} & three-state FSM (lookup and refill) \\
+\texttt{cache\_top}        & integrates datapath, controller, memory \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Controller FSM}
+The controller is a Mealy FSM with three states:
+\begin{itemize}
+  \item \textbf{IDLE} --- the hit signal is combinational, so a hit is answered
+        in the same cycle (\texttt{cpu\_ready}), while a miss asserts
+        \texttt{mem\_req} and moves to ALLOCATE.
+  \item \textbf{ALLOCATE} --- holds the memory request until the block arrives,
+        then asserts the write-enable to load the data, tag, and valid bit, and
+        moves to DONE.
+  \item \textbf{DONE} --- returns the requested word to the CPU and goes back to
+        IDLE.
+\end{itemize}
+A hit costs \textbf{1 cycle}; a miss costs \textbf{$1 + 10 = 11$ cycles}. The
+10-cycle penalty is a tunable parameter representing main-memory latency.
+
+\subsection{Verification Methodology}
+A trace-driven testbench issues each address from a trace file, waits for the
+response, and counts hit/miss strobes. An independent Python reference model
+(\texttt{cache\_sim.py}) reproduces the same tag/index/offset logic and
+cold-start behaviour; agreement between the two is the correctness criterion.
+
+%-----------------------------------------------------------------------------
+\section{Results and Discussion}
+Three traces of 256 accesses each were run. RTL (Icarus Verilog) and the
+reference model produced identical numbers, shown in Table~\ref{tab:results}.
+
+\begin{table}[htbp]
+\caption{Hit/miss statistics and AMAT (256 accesses, 10-cycle penalty)}
+\label{tab:results}
+\centering
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Trace} & \textbf{Hits} & \textbf{Miss} & \textbf{Hit\%} & \textbf{Miss\%} & \textbf{AMAT} \\
+\midrule
+Sequential & 192 & 64  & 75.00 & 25.00 & 3.500 \\
+Repeated   & 248 & 8   & 96.88 & 3.12  & 1.312 \\
+Random     & 41  & 215 & 16.02 & 83.98 & 9.398 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The AMAT model is
+\begin{equation}
+\text{AMAT} = t_{hit} + m \times t_{penalty},
+\end{equation}
+with $t_{hit}=1$ cycle, $t_{penalty}=10$ cycles, and $m$ the measured miss rate.
+
+\textbf{Discussion.} The \emph{sequential} trace strides one word at a time;
+because each 16-byte block holds four words, exactly one access in four
+misses---a direct measurement of \emph{spatial locality} (75\% hit). The
+\emph{repeated} trace cycles over a small working set that fits in the cache, so
+after the compulsory misses almost every access hits (96.88\%)---\emph{temporal
+locality}. The \emph{random} trace spreads accesses over four times the cache
+size, so conflict and capacity misses dominate (16.02\% hit), and AMAT
+approaches the full miss penalty. AMAT thus ranges from 1.31 cycles (good
+locality, memory latency largely hidden) to 9.40 cycles (poor locality, penalty
+paid almost every access), exactly as the memory-hierarchy model predicts.
+
+%-----------------------------------------------------------------------------
+\section{Individual Contributions}
+\begin{itemize}
+  \item \textbf{[Member 1 --- Name]} --- Architecture lead: cache parameters,
+        address-decoder module, architecture documentation, repository setup.
+  \item \textbf{[Member 2 --- Name]} --- Storage arrays: data RAM, tag RAM, and
+        valid RAM with reset handling.
+  \item \textbf{[Member 3 --- Name]} --- Controller FSM and behavioural
+        main-memory model (hit/miss/refill paths).
+  \item \textbf{[Member 4 --- Name]} --- System integration
+        (\texttt{cache\_top}), tag comparator, trace-driven testbench, and build
+        flow.
+  \item \textbf{[Member 5 --- Name]} --- Trace generation, Python reference
+        model, AMAT analysis, and report compilation.
+\end{itemize}
+The GitHub commit history reflects these contributions.
+
+%-----------------------------------------------------------------------------
+\section{Conclusion and Future Work}
+A functionally correct direct-mapped cache controller was designed, implemented,
+and verified in Verilog, and its behaviour was analysed across three access
+patterns. The measured hit ratios and AMAT values match an independent model and
+clearly demonstrate the roles of temporal and spatial locality. \emph{Phase II}
+will extend this prototype with logic synthesis (area/timing results),
+cache-size and block-size parameter sweeps, write-policy support, and a
+direct-mapped versus set-associative comparison.
+
+%-----------------------------------------------------------------------------
+\begin{thebibliography}{1}
+\bibitem{hennessy}
+J.~L. Hennessy and D.~A. Patterson, \emph{Computer Architecture: A Quantitative
+Approach}, 6th~ed. Cambridge, MA, USA: Morgan Kaufmann, 2019.
+
+\bibitem{patterson}
+D.~A. Patterson and J.~L. Hennessy, \emph{Computer Organization and Design: The
+Hardware/Software Interface}, 5th~ed. Waltham, MA, USA: Morgan Kaufmann, 2014.
+
+\bibitem{smith}
+A.~J. Smith, ``Cache memories,'' \emph{ACM Computing Surveys}, vol.~14, no.~3,
+pp.~473--530, Sep.~1982.
+
+\bibitem{denning}
+P.~J. Denning, ``The locality principle,'' \emph{Communications of the ACM},
+vol.~48, no.~7, pp.~19--24, Jul.~2005.
+
+\bibitem{harris}
+D.~M. Harris and S.~L. Harris, \emph{Digital Design and Computer Architecture},
+2nd~ed. Waltham, MA, USA: Morgan Kaufmann, 2012.
+\end{thebibliography}
+
+\end{document}
