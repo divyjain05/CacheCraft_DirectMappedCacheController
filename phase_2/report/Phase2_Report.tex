@@ -1,0 +1,165 @@
+%=============================================================================
+% Phase 2 IEEE report -- Set-Associative Write-Back Cache
+% Compile: pdflatex Phase2_Report.tex  (needs IEEEtran; Overleaf -> pdfLaTeX)
+% Fill in every [Name / Roll No] before submitting.
+%=============================================================================
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite,amsmath,booktabs,array,url}
+
+\begin{document}
+
+\title{From Direct-Mapped to Set-Associative: A Write-Back\\
+Cache with Design-Space Exploration (Phase 2)}
+
+\author{
+\IEEEauthorblockN{Divy Kumar Jain}\IEEEauthorblockA{[Roll No]}\and
+\IEEEauthorblockN{Praveen Kumar Nitharwal}\IEEEauthorblockA{[Roll No]}\and
+\IEEEauthorblockN{Piyush Raj}\IEEEauthorblockA{[Roll No]}\and
+\IEEEauthorblockN{Utkarsh Jain}\IEEEauthorblockA{[Roll No]}
+}
+\maketitle
+
+\begin{abstract}
+Phase 1 delivered a verified direct-mapped, read-only cache. Phase 2 completes
+the project by extending it into a \emph{2-way set-associative, write-back}
+cache in Verilog, and by exploring the cache design space. The new design adds
+LRU replacement, a write path with a dirty bit and write-allocate, and a
+writeback-on-eviction sequence, organised as 32 sets of 2 ways (tag 23, index
+5, offset 4). A read/write trace-driven testbench and a parameterized Python
+model (which agree exactly on hit ratios and writeback counts) measure the
+effect of associativity, block size, cache size, and write policy. The central
+result is that associativity eliminates conflict misses: on a conflict-heavy
+trace the direct-mapped cache achieves 0\% hits while the 2-way cache achieves
+99.22\%. A Yosys synthesis pass reports the cache's cell/area cost.
+\end{abstract}
+
+\begin{IEEEkeywords}
+set-associative cache, LRU replacement, write-back, write-allocate, AMAT,
+conflict miss, Verilog, logic synthesis.
+\end{IEEEkeywords}
+
+\section{Introduction}
+A direct-mapped cache maps each block to exactly one line, so two frequently
+used blocks that share a line evict one another repeatedly (conflict misses).
+Set-associative caches give each set several ways, allowing such blocks to
+coexist. Phase 2 implements a 2-way set-associative cache, adds write support
+with a write-back policy, and quantifies the architectural trade-offs through a
+parameter sweep and synthesis.
+
+\section{Proposed Solution}
+\subsection{Organisation and Mapping}
+The cache keeps the Phase 1 capacity (1~KB, 16~B blocks) but reorganises it as
+32 sets of 2 ways. The tag is compared against both ways of the indexed set in
+parallel; a hit in either way returns the word in one cycle.
+
+\subsection{LRU Replacement}
+With two ways, one bit per set records the least-recently-used way. On any hit
+or fill of way $w$, the other way becomes the victim ($lru \leftarrow \lnot w$);
+on a miss the victim is the current LRU way.
+
+\subsection{Write-Back Policy}
+Write hits update the cached word and set a dirty bit (no memory traffic).
+Write misses use write-allocate: the block is fetched, the store word merged,
+and the line marked dirty. Evicting a dirty line writes it back to memory
+before the new block is fetched. The controller FSM has four states: IDLE
+(1-cycle hit), WB (write back a dirty victim), ALLOC (fetch the new block), and
+FIN (answer the CPU).
+
+\subsection{Verification}
+A read/write testbench drives the RTL and counts read/write hits, misses, and
+writebacks. An independent Python model reproduces the same associativity, LRU,
+and write-back behaviour; exact agreement on hit ratio and writeback count is
+the correctness criterion.
+
+\section{Results}
+\subsection{RTL vs.\ Reference Model}
+Both produce identical hit ratios and writeback counts (Table~\ref{tab:rtl}).
+
+\begin{table}[htbp]
+\caption{RTL and model agreement (256 accesses, 2-way write-back)}
+\label{tab:rtl}
+\centering
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Trace} & \textbf{Hit \%} & \textbf{Writebacks} & \textbf{AMAT} \\
+\midrule
+conflict   & 99.22 & 0  & 1.078 \\
+repeated   & 96.88 & 0  & 1.312 \\
+sequential & 75.00 & 0  & 3.500 \\
+random     & 17.97 & 40 & 9.203 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Design-Space Sweep}
+Table~\ref{tab:sweep} compares configurations on the conflict and random
+traces.
+
+\begin{table}[htbp]
+\caption{Hit ratio across configurations}
+\label{tab:sweep}
+\centering
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Configuration} & \textbf{conflict} & \textbf{random} \\
+\midrule
+Direct-mapped 1\,KB/16\,B & 0.00  & 14.45 \\
+2-way 1\,KB/16\,B         & 99.22 & 17.97 \\
+4-way 1\,KB/16\,B         & 99.22 & 19.14 \\
+Direct-mapped 1\,KB/32\,B & 0.00  & 20.70 \\
+Direct-mapped 2\,KB/16\,B & 99.22 & 28.12 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three effects stand out: (i) associativity removes the conflict misses that
+cripple the direct-mapped cache (0\% $\rightarrow$ 99.22\%); (ii) larger blocks
+raise spatial-locality hit rates (sequential 75\% $\rightarrow$ 87.5\% at 32~B,
+not shown); and (iii) more capacity reduces capacity misses on the random
+trace. Write-back incurs writebacks only on dirty evictions (40 on the random
+trace), far fewer memory writes than write-through would generate.
+
+\subsection{Synthesis}
+Synthesizing \texttt{sa\_cache} with Yosys~\cite{yosys} (\texttt{make synth})
+maps the design to generic gates (Table~\ref{tab:synth}). The $\approx$9{,}800
+flip-flops correspond almost entirely to the storage: two ways of 32 lines,
+each 128-bit data $+$ 23-bit tag $+$ valid $+$ dirty ($\approx$153 bits), plus
+the per-set LRU bits and the FSM state. The large mux count reflects
+way-selection, word-selection, and writeback datapaths.
+
+\begin{table}[htbp]
+\caption{Yosys synthesis of \texttt{sa\_cache} (generic gates)}
+\label{tab:synth}
+\centering
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Resource} & \textbf{Count} \\
+\midrule
+Total cells        & 25{,}233 \\
+Flip-flops (DFFE/DFF/SDFFE) & 9{,}828 \\
+Multiplexers       & 8{,}786 \\
+Wires              & 14{,}660 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+Phase 2 completes the project: a working 2-way set-associative write-back cache,
+verified against a reference model, with a parameter sweep and synthesis that
+quantify the cost and benefit of associativity, block size, capacity, and write
+policy. The results confirm, on real traces, why modern caches are
+set-associative.
+
+\begin{thebibliography}{1}
+\bibitem{hennessy} J.~L. Hennessy and D.~A. Patterson, \emph{Computer
+Architecture: A Quantitative Approach}, 6th~ed. Morgan Kaufmann, 2019.
+\bibitem{patterson} D.~A. Patterson and J.~L. Hennessy, \emph{Computer
+Organization and Design}, 5th~ed. Morgan Kaufmann, 2014.
+\bibitem{smith} A.~J. Smith, ``Cache memories,'' \emph{ACM Computing Surveys},
+vol.~14, no.~3, pp.~473--530, 1982.
+\bibitem{yosys} C.~Wolf, ``Yosys Open SYnthesis Suite,''
+\url{https://yosyshq.net/yosys/}.
+\end{thebibliography}
+
+\end{document}
