@@ -1,0 +1,26 @@
+Yosys synthesis summary - sa_cache
+2-way set-associative write-back cache, generic-gate mapping (yosys synth).
+Reproduce the full run with: make synth
+
+=== sa_cache ===
+
+  wires        14660
+  wire bits    26612
+  cells        25233
+
+  cell breakdown
+    $_DFFE_PP_      9664    (data/tag/valid/dirty/LRU storage + state)
+    $_SDFFE_PP0P_    160
+    $_DFF_P_           4
+    $_MUX_          8786    (way-select, word-select, writeback muxing)
+    $_AND_          2266
+    $_NAND_         2195
+    $_ORNOT_         739
+    $_OR_            693
+    $_ANDNOT_        403
+    $_NOR_           230
+    $_NOT_            73
+    $_XNOR_           13
+    $_XOR_             7
+
+  Flip-flops total: 9828  (storage: 2 ways x 32 lines x ~153 bits + LRU + FSM)
