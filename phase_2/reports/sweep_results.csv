@@ -1,0 +1,25 @@
+trace,config,cache_B,block_B,assoc,policy,hit_rate_%,miss_rate_%,writebacks,mem_reads,mem_writes,AMAT
+conflict,DM 1KB/16B wb,1024,16,1,wb,0.0,100.0,66,256,66,11.0
+conflict,2-way 1KB/16B wb,1024,16,2,wb,99.22,0.78,0,2,0,1.078
+conflict,4-way 1KB/16B wb,1024,16,4,wb,99.22,0.78,0,2,0,1.078
+conflict,DM 1KB/32B wb,1024,32,1,wb,0.0,100.0,66,256,66,11.0
+conflict,DM 2KB/16B wb,2048,16,1,wb,99.22,0.78,0,2,0,1.078
+conflict,2-way 1KB/16B wt,1024,16,2,wt,98.44,1.56,0,2,66,1.156
+random,DM 1KB/16B wb,1024,16,1,wb,14.45,85.55,42,219,42,9.555
+random,2-way 1KB/16B wb,1024,16,2,wb,17.97,82.03,40,210,40,9.203
+random,4-way 1KB/16B wb,1024,16,4,wb,19.14,80.86,44,207,44,9.086
+random,DM 1KB/32B wb,1024,32,1,wb,20.7,79.3,51,203,51,8.93
+random,DM 2KB/16B wb,2048,16,1,wb,28.12,71.88,20,184,20,8.188
+random,2-way 1KB/16B wt,1024,16,2,wt,16.02,83.98,0,164,63,9.398
+repeated,DM 1KB/16B wb,1024,16,1,wb,96.88,3.12,0,8,0,1.312
+repeated,2-way 1KB/16B wb,1024,16,2,wb,96.88,3.12,0,8,0,1.312
+repeated,4-way 1KB/16B wb,1024,16,4,wb,96.88,3.12,0,8,0,1.312
+repeated,DM 1KB/32B wb,1024,32,1,wb,98.44,1.56,0,4,0,1.156
+repeated,DM 2KB/16B wb,2048,16,1,wb,96.88,3.12,0,8,0,1.312
+repeated,2-way 1KB/16B wt,1024,16,2,wt,94.92,5.08,0,8,80,1.508
+sequential,DM 1KB/16B wb,1024,16,1,wb,75.0,25.0,0,64,0,3.5
+sequential,2-way 1KB/16B wb,1024,16,2,wb,75.0,25.0,0,64,0,3.5
+sequential,4-way 1KB/16B wb,1024,16,4,wb,75.0,25.0,0,64,0,3.5
+sequential,DM 1KB/32B wb,1024,32,1,wb,87.5,12.5,0,32,0,2.25
+sequential,DM 2KB/16B wb,2048,16,1,wb,75.0,25.0,0,64,0,3.5
+sequential,2-way 1KB/16B wt,1024,16,2,wt,65.62,34.38,0,64,48,4.438
