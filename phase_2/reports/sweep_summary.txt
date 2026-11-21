@@ -1,0 +1,32 @@
+trace       config               hit%    AMAT    WB
+----------------------------------------------------
+----------------------------------------------------
+conflict    DM 1KB/16B wb        0.00  11.000    66
+conflict    2-way 1KB/16B wb    99.22   1.078     0
+conflict    4-way 1KB/16B wb    99.22   1.078     0
+conflict    DM 1KB/32B wb        0.00  11.000    66
+conflict    DM 2KB/16B wb       99.22   1.078     0
+conflict    2-way 1KB/16B wt    98.44   1.156     0
+----------------------------------------------------
+random      DM 1KB/16B wb       14.45   9.555    42
+random      2-way 1KB/16B wb    17.97   9.203    40
+random      4-way 1KB/16B wb    19.14   9.086    44
+random      DM 1KB/32B wb       20.70   8.930    51
+random      DM 2KB/16B wb       28.12   8.188    20
+random      2-way 1KB/16B wt    16.02   9.398     0
+----------------------------------------------------
+repeated    DM 1KB/16B wb       96.88   1.312     0
+repeated    2-way 1KB/16B wb    96.88   1.312     0
+repeated    4-way 1KB/16B wb    96.88   1.312     0
+repeated    DM 1KB/32B wb       98.44   1.156     0
+repeated    DM 2KB/16B wb       96.88   1.312     0
+repeated    2-way 1KB/16B wt    94.92   1.508     0
+----------------------------------------------------
+sequential  DM 1KB/16B wb       75.00   3.500     0
+sequential  2-way 1KB/16B wb    75.00   3.500     0
+sequential  4-way 1KB/16B wb    75.00   3.500     0
+sequential  DM 1KB/32B wb       87.50   2.250     0
+sequential  DM 2KB/16B wb       75.00   3.500     0
+sequential  2-way 1KB/16B wt    65.62   4.438     0
+
+full table -> reports/sweep_results.csv
