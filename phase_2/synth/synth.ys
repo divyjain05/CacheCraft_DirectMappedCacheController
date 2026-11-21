@@ -1,0 +1,26 @@
+# ============================================================================
+# synth.ys  --  Yosys synthesis script for the 2-way set-associative cache
+# ----------------------------------------------------------------------------
+# Produces a generic-gate netlist and a cell/area report (the Phase 2
+# "synthesis results" deliverable). The external main-memory model is NOT
+# synthesized -- only the cache hardware (controller FSM + tag/data/valid/
+# dirty/LRU arrays).
+#
+# Install yosys first:   brew install yosys      (macOS)
+#                        sudo apt install yosys   (Linux)
+# Run:                    yosys -s synth/synth.ys
+# Save the log:           yosys -s synth/synth.ys | tee reports/synth_report.txt
+# ============================================================================
+
+read_verilog -I rtl rtl/sa_cache.v
+hierarchy -top sa_cache -check
+
+# generic synthesis (proc, opt, fsm extraction, memory inference, techmap)
+synth -top sa_cache
+
+# optional: map flip-flops/gates to a standard-cell library if you have one
+#   dfflibmap -liberty <your_lib>.lib
+#   abc -liberty <your_lib>.lib
+
+# area / cell-count report
+stat
