@@ -1,0 +1,56 @@
+# Phase 2 RTL simulation (iverilog) - 2-way set-associative write-back cache
+
+=====================================================
+ 2-Way Set-Associative Write-Back Cache  --  Report
+   trace     : sim/traces/conflict.txt
+   config    : 1024B, 16B blocks, 2-way, 32 sets
+-----------------------------------------------------
+   accesses  : 256
+   read  h/m : 189 / 1
+   write h/m : 65 / 1
+   writebacks: 0
+   hit ratio : 99.22 %
+   AMAT model: 1.078 cycles  [1 + miss_rate*10]
+   AMAT eff. : 1.078 cycles  [incl. writeback stalls]
+=====================================================
+=====================================================
+ 2-Way Set-Associative Write-Back Cache  --  Report
+   trace     : sim/traces/repeated.txt
+   config    : 1024B, 16B blocks, 2-way, 32 sets
+-----------------------------------------------------
+   accesses  : 256
+   read  h/m : 172 / 4
+   write h/m : 76 / 4
+   writebacks: 0
+   hit ratio : 96.88 %
+   AMAT model: 1.312 cycles  [1 + miss_rate*10]
+   AMAT eff. : 1.312 cycles  [incl. writeback stalls]
+=====================================================
+
+=====================================================
+ 2-Way Set-Associative Write-Back Cache  --  Report
+   trace     : sim/traces/sequential.txt
+   config    : 1024B, 16B blocks, 2-way, 32 sets
+-----------------------------------------------------
+   accesses  : 256
+   read  h/m : 163 / 45
+   write h/m : 29 / 19
+   writebacks: 0
+   hit ratio : 75.00 %
+   AMAT model: 3.500 cycles  [1 + miss_rate*10]
+   AMAT eff. : 3.500 cycles  [incl. writeback stalls]
+=====================================================
+
+=====================================================
+ 2-Way Set-Associative Write-Back Cache  --  Report
+   trace     : sim/traces/random.txt
+   config    : 1024B, 16B blocks, 2-way, 32 sets
+-----------------------------------------------------
+   accesses  : 256
+   read  h/m : 35 / 158
+   write h/m : 11 / 52
+   writebacks: 40
+   hit ratio : 17.97 %
+   AMAT model: 9.203 cycles  [1 + miss_rate*10]
+   AMAT eff. : 10.766 cycles  [incl. writeback stalls]
+=====================================================
