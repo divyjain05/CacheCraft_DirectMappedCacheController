@@ -1,0 +1,112 @@
+===============================================================================
+ PHASE 2 - WORK SPLIT & GITHUB PUSH PLAN  (4 MEMBERS)
+ Project: Direct-Mapped Cache Controller -> 2-way Set-Associative, Write-Back
+===============================================================================
+
+Phase 2 completes the project. It extends the Phase 1 direct-mapped read-only
+cache into a 2-way set-associative, WRITE-BACK cache (reads + writes, LRU
+replacement, dirty bit), and adds design-space analysis (parameter sweep) and
+logic synthesis.
+
+These files are pushed to the SAME repository that already holds Phase 1, so
+the two phases together form the complete project.
+
+Each of the 4 members owns distinct files (so GitHub shows each person's
+contribution) and has about 5 commits.
+Suggested merge order: M1 -> M2 -> M3 -> M4.
+
+-------------------------------------------------------------------------------
+MEMBER 1  --  Divy Kumar Jain  --  Set-Associative Cache RTL (core)
+-------------------------------------------------------------------------------
+Part: Defines the Phase 2 configuration (2-way, 32 sets, tag 23 / index 5 /
+      offset 4) and implements the heart of the design - the 2-way cache
+      datapath and controller: two ways of storage, parallel tag compare, LRU
+      replacement, the write-back write path (dirty bit + write-allocate), and
+      the IDLE/WB/ALLOC/FIN state machine.
+
+Pushes:
+  rtl/cache_defs.vh
+  rtl/sa_cache.v
+
+Commits:
+  1. feat: add Phase 2 config (2-way, write-back params + address split)
+  2. feat: sa_cache storage - two ways (tag/data/valid/dirty arrays)
+  3. feat: parallel tag compare + hit / way select
+  4. feat: LRU replacement + write-back path (dirty bit, write-allocate merge)
+  5. feat: controller FSM (IDLE / WB / ALLOC / FIN)
+
+-------------------------------------------------------------------------------
+MEMBER 2  --  Praveen Kumar Nitharwal  --  Memory, Integration, Build & Synthesis
+-------------------------------------------------------------------------------
+Part: Builds the read/write main-memory model (now needs block WRITES for
+      write-back), wires the top level, owns the build flow, and runs logic
+      synthesis.
+
+Pushes:
+  rtl/main_memory_rw.v
+  rtl/sa_cache_top.v
+  Makefile
+  synth/synth.ys
+
+Commits:
+  1. feat: read/write main-memory model with latency
+  2. feat: block write-back support in the memory model
+  3. feat: wire sa_cache_top (cache + memory)
+  4. build: add Phase 2 Makefile (run / sweep / synth / model)
+  5. feat: Yosys synthesis script + capture synthesis report
+
+-------------------------------------------------------------------------------
+MEMBER 3  --  Piyush Raj  --  Verification & Traces
+-------------------------------------------------------------------------------
+Part: Generates the read/write traces and the testbench that drives the cache,
+      counts read/write hits, misses and writebacks, and reports AMAT. Confirms
+      the RTL hit ratios match the reference model.
+
+Pushes:
+  sim/tb_sa_cache.v
+  scripts/gen_rw_traces.py
+  sim/traces/   (the generated .txt traces)
+
+Commits:
+  1. feat: read/write trace generator (seq / repeated / conflict / random)
+  2. feat: generate 256-access read/write traces
+  3. feat: trace-driven testbench for the SA cache
+  4. feat: hit / miss / writeback counters + AMAT (model + effective)
+  5. test: confirm RTL hit ratios match the reference model
+
+-------------------------------------------------------------------------------
+MEMBER 4  --  Utkarsh Jain  --  Analysis, Documentation & Report
+-------------------------------------------------------------------------------
+Part: Owns the analysis engine - the parameterized Python model (any
+      associativity / size / block / write policy), the parameter sweep - and
+      writes the Phase 2 documentation and IEEE report.
+
+Pushes:
+  scripts/cache_model.py
+  scripts/sweep.py
+  docs/phase2_design.md
+  report/Phase2_Report.tex
+  README.md
+  reports/   (sweep_results.csv, sweep_summary.txt, rtl_sa_report.txt,
+             synth_report.txt)
+
+Commits:
+  1. feat: parameterized cache model (assoc / size / block / write policy + LRU)
+  2. test: model self-test (conflict win + dirty-eviction cases)
+  3. feat: parameter sweep -> CSV + summary table
+  4. docs: Phase 2 design notes + README
+  5. report: Phase 2 IEEE report with sweep + synthesis results
+
+===============================================================================
+ HOW TO VERIFY BEFORE PUSHING
+===============================================================================
+  make model    # Python reference-model self-test  -> "self-test: OK"
+  make sweep    # parameter sweep (needs no HDL tools)
+  make run      # compile RTL + run testbench on all traces (needs iverilog)
+  make synth    # synthesize the cache (needs yosys)
+
+ Key result to show: on the "conflict" trace the direct-mapped cache gets 0%
+ hits while the 2-way cache gets 99.22% - the set-associative win. RTL hit
+ ratios and writeback counts match the Python model exactly. Synthesis reports
+ ~25,233 cells and ~9,828 flip-flops for the cache.
+===============================================================================
