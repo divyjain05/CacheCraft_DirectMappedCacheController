@@ -3,7 +3,6 @@
 % Compile with: pdflatex IEEE_Report.tex   (needs the IEEEtran class)
 %   - Overleaf: create a project, upload this file, set compiler to pdfLaTeX.
 %   - Local (TeX Live): `pdflatex IEEE_Report.tex` twice (for references).
-% Fill in every [Name / Roll No] before submitting.
 %=============================================================================
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
@@ -19,22 +18,6 @@
 
 \title{Design and Analysis of a Direct-Mapped Cache\\ Controller in Verilog}
 
-\author{
-\IEEEauthorblockN{[Member 1 --- Name]}
-\IEEEauthorblockA{Roll No: [xxx]\\ Dept. of [\ldots]\\ [University]}
-\and
-\IEEEauthorblockN{[Member 2 --- Name]}
-\IEEEauthorblockA{Roll No: [xxx]\\ Dept. of [\ldots]\\ [University]}
-\and
-\IEEEauthorblockN{[Member 3 --- Name]}
-\IEEEauthorblockA{Roll No: [xxx]\\ Dept. of [\ldots]\\ [University]}
-\and
-\IEEEauthorblockN{[Member 4 --- Name]}
-\IEEEauthorblockA{Roll No: [xxx]\\ Dept. of [\ldots]\\ [University]}
-\and
-\IEEEauthorblockN{[Member 5 --- Name]}
-\IEEEauthorblockA{Roll No: [xxx]\\ Dept. of [\ldots]\\ [University]}
-}
 
 \maketitle
 
@@ -208,19 +191,18 @@ paid almost every access), exactly as the memory-hierarchy model predicts.
 %-----------------------------------------------------------------------------
 \section{Individual Contributions}
 \begin{itemize}
-  \item \textbf{[Member 1 --- Name]} --- Architecture lead: cache parameters,
-        address-decoder module, architecture documentation, repository setup.
-  \item \textbf{[Member 2 --- Name]} --- Storage arrays: data RAM, tag RAM, and
-        valid RAM with reset handling.
-  \item \textbf{[Member 3 --- Name]} --- Controller FSM and behavioural
-        main-memory model (hit/miss/refill paths).
-  \item \textbf{[Member 4 --- Name]} --- System integration
-        (\texttt{cache\_top}), tag comparator, trace-driven testbench, and build
-        flow.
-  \item \textbf{[Member 5 --- Name]} --- Trace generation, Python reference
-        model, AMAT analysis, and report compilation.
+  \item \textbf{Author 1} --- Architecture and address decoding: cache parameter
+        definitions, the address-decoder module, architecture documentation, and
+        repository setup.
+  \item \textbf{Author 2} --- Cache storage arrays: the data RAM, tag RAM, and
+        valid RAM, including reset handling.
+  \item \textbf{Author 3} --- Controller FSM, behavioural main-memory model, tag
+        comparator, top-level integration (\texttt{cache\_top}), and the
+        trace-driven testbench.
+  \item \textbf{Author 4} --- Trace generation, the Python reference model, AMAT
+        analysis, and report preparation.
 \end{itemize}
-The GitHub commit history reflects these contributions.
+The project's version-control commit history reflects these contributions.
 
 %-----------------------------------------------------------------------------
 \section{Conclusion and Future Work}
